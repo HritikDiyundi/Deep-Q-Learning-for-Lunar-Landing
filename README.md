@@ -1,20 +1,22 @@
-# Deep-Q-Learning-for-Lunar-Landing
-Deep Q-Learning consists of combining Q-Learning with Artificial Neural Networks. Inputs are encoded vectors, each one defining a state of the environment. These inputs go to an Artificial Neural Network, where the output is the action to play
+To format the provided code for GitHub README, you can use Markdown syntax. Here's how you can structure it:
 
+```markdown
+# Deep Q-Learning for Lunar Landing
 
 ## Part 0 - Installing the required packages and importing the libraries
 
-
 ### Installing Gymnasium
 
+```bash
 !pip install gymnasium
 !pip install "gymnasium[atari, accept-rom-license]"
 !apt-get install -y swig
 !pip install gymnasium[box2d]
-
+```
 
 ### Importing the libraries
 
+```python
 import os
 import random
 import numpy as np
@@ -25,41 +27,59 @@ import torch.nn.functional as F
 import torch.autograd as autograd
 from torch.autograd import Variable
 from collections import deque, namedtuple
+```
+## Part 1 - Building the AI
 
+### Creating the architecture of the Neural Network
+
+```python
+class Network(nn.Module):
+
+  def __init__(self, state_size, action_size, seed = 42):
+    super(Network, self).__init__()
+    self.seed = torch.manual_seed(seed)
+    self.fc1 = nn.Linear(state_size, 64)
+    self.fc2 = nn.Linear(64, 64)
+    self.fc3 = nn.Linear(64, action_size)
+
+  def forward(self, state):
+    x = self.fc1(state)
+    x = F.relu(x)
+    x = self.fc2(x)
+    x = F.relu(x)
+    return self.fc3(x)
+    ```
 
 ## Part 2 - Training the AI
 
-
 ### Setting up the environment
 
+```python
 import gymnasium as gym
+
 env = gym.make('LunarLander-v2')
 state_shape = env.observation_space.shape
 state_size = env.observation_space.shape[0]
 number_actions = env.action_space.n
+
 print('State shape: ', state_shape)
 print('State size: ', state_size)
 print('Number of actions: ', number_actions)
-
-
-//output
-
-State shape:  (8,)
-State size:  8
-Number of actions:  4
+```
 
 ### Initializing the hyperparameters
 
+```python
 learning_rate = 5e-4
 minibatch_size = 100
 discount_factor = 0.99
 replay_buffer_size = int(1e5)
 interpolation_parameter = 1e-3
-
+```
 
 ### Implementing Experience Replay
 
-
+```python
 class ReplayMemory(object):
 
   def __init__(self, capacity):
@@ -80,12 +100,12 @@ class ReplayMemory(object):
     next_states = torch.from_numpy(np.vstack([e[3] for e in experiences if e is not None])).float().to(self.device)
     dones = torch.from_numpy(np.vstack([e[4] for e in experiences if e is not None]).astype(np.uint8)).float().to(self.device)
     return states, next_states, actions, rewards, dones
+```
 
+### Implementing the DQN class
 
-    ### Implementing the DQN class
-
-
-    class Agent():
+```python
+class Agent():
 
   def __init__(self, state_size, action_size):
     self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -130,12 +150,17 @@ class ReplayMemory(object):
   def soft_update(self, local_model, target_model, interpolation_parameter):
     for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):
       target_param.data.copy_(interpolation_parameter * local_param.data + (1.0 - interpolation_parameter) * target_param.data)
+```
 
-      ### Initializing the DQN agent
+### Initializing the DQN agent
 
+```python
 agent = Agent(state_size, number_actions)
+```
 
+### Training the DQN agent
 
+```python
 number_episodes = 2000
 maximum_number_timesteps_per_episode = 1000
 epsilon_starting_value  = 1.0
@@ -164,7 +189,7 @@ for episode in range(1, number_episodes + 1):
     print('\nEnvironment solved in {:d} episodes!\tAverage Score: {:.2f}'.format(episode - 100, np.mean(scores_on_100_episodes)))
     torch.save(agent.local_qnetwork.state_dict(), 'checkpoint.pth')
     break
+```
 
+## Part 3 - Visualizing the results
 
-    ## Part 3 - Visualizing the results
-      
